@@ -33,6 +33,10 @@ app.use((req, res, next) => {
 // ─── MongoDB Connection ───────────────────────────────────────────────────────
 let isConnected = false;
 const connectDB = async () => {
+  if (!process.env.MONGO_URI) {
+    console.error('⚠️  MONGO_URI is missing from environment variables!');
+    return;
+  }
   if (isConnected || mongoose.connection.readyState === 1) {
     isConnected = true;
     return;
@@ -48,36 +52,45 @@ const connectDB = async () => {
   }
 };
 
-// Connect immediately on startup
-connectDB();
+// Connect on initial load if MONGO_URI is present
+if (process.env.MONGO_URI) {
+  connectDB();
+}
 
 // Ensure DB is connected before handling requests
 app.use(async (req, res, next) => {
-  if (mongoose.connection.readyState !== 1) {
+  if (process.env.MONGO_URI && mongoose.connection.readyState !== 1) {
     await connectDB();
   }
   next();
 });
 
 // ─── Session Middleware ───────────────────────────────────────────────────────
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || 'fallback_secret_change_this',
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
+const sessionConfig = {
+  secret: process.env.SESSION_SECRET || 'student_task_manager_fallback_secret_key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  },
+};
+
+if (process.env.MONGO_URI) {
+  try {
+    sessionConfig.store = MongoStore.create({
       mongoUrl: process.env.MONGO_URI,
       collectionName: 'sessions',
       ttl: 24 * 60 * 60, // 1 day
-    }),
-    cookie: {
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-    },
-  })
-);
+    });
+  } catch (err) {
+    console.error('⚠️  Failed to create MongoStore, fallback to memory store:', err.message);
+  }
+}
+
+app.use(session(sessionConfig));
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 const authRoutes = require('./routes/auth');
