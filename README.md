@@ -1,262 +1,216 @@
-# 📋 Student Task Manager
+# 📋 Student Task & Progress Manager
 
-A modern, production-quality full-stack web application for students to manage their tasks. Built as a capstone project for WD401 – Full Stack Web Application with Node.js & Express.js.
+A modern, production-grade, full-stack web application designed for students to organize academic tasks, monitor daily productivity, and track study milestones through interactive analytics and a schedule calendar.
 
----
-
-## 📖 Project Description
-
-Student Task Manager is a secure, session-authenticated productivity application where users can create an account, log in, and manage their personal tasks through a clean and professional dashboard. All data is persisted in MongoDB — no dummy data or hardcoded values.
+> Built as the Capstone Project for **WD401 – Full Stack Web Application with Node.js & Express.js**.
 
 ---
 
-## ✨ Features
+## 🚀 Live Demo & Repository
 
-- **User Authentication** – Signup, Login, and Logout with secure sessions
-- **Password Security** – bcrypt hashing (12 salt rounds), never plain-text
-- **Duplicate Email Prevention** – Unique email enforcement at both DB and application level
-- **Personal Dashboard** – Greeting, real-time task stats, and task list
-- **Task Creation** – Add tasks with title and creation timestamp
-- **Task Completion** – Toggle tasks between pending and completed
-- **Task Deletion** – Delete tasks with confirmation
-- **User-Scoped Data** – Users can only see and modify their own tasks
-- **Responsive Design** – Works on desktop, tablet, and mobile
-- **Professional UI** – Clean white + green design system, no gradients
+- **GitHub Repository**: [https://github.com/adiseshu143/Student-Traker.git](https://github.com/adiseshu143/Student-Traker.git)
+- **Deployment Platform**: Vercel (Serverless Node.js) / Local Node.js
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Complete Technology Stack
 
-| Layer          | Technology                      |
-|----------------|----------------------------------|
-| Runtime        | Node.js                          |
-| Framework      | Express.js                       |
-| Database       | MongoDB + Mongoose               |
-| Templating     | EJS                              |
-| Authentication | express-session + bcrypt         |
-| Session Store  | connect-mongo (MongoDB sessions) |
-| Config         | dotenv                           |
-| Styling        | Vanilla CSS (Google Fonts: Inter)|
+### **Backend & Core Engine**
+- **Node.js**: Asynchronous JavaScript runtime environment.
+- **Express.js (v4.21.2)**: RESTful web application framework handling middleware, routing, and HTTP requests.
+- **MongoDB**: NoSQL document database storing users, tasks, and session records.
+- **Mongoose (v8.9.5)**: Object Data Modeling (ODM) library for schema validation, hooks, and relationships.
+
+### **Authentication & Security**
+- **bcryptjs (v3.0.3)**: Multi-round (12 salt rounds) cryptographic password hashing.
+- **express-session (v1.18.1)**: Secure, HTTP-only cookie-based session management.
+- **connect-mongo (v5.1.0)**: Persistent session store in MongoDB with automatic TTL expiry.
+- **dotenv (v16.4.7)**: Environment variable isolation to safeguard production secrets.
+
+### **Frontend & User Interface**
+- **EJS (Embedded JavaScript v3.1.10)**: Server-side templating engine for dynamic page rendering.
+- **Vanilla CSS3**: Custom responsive design system featuring a clean aesthetic, CSS custom properties (variables), cards, and solid modern palettes.
+- **Vanilla JavaScript (ES6+)**: Client-side form validation, date manipulation, interactive calendar controls, and asynchronous API calls.
+- **Chart.js (v4.4.x)**: Interactive data visualization library powering daily completion trends and status doughnut charts.
+- **Google Fonts (Inter)**: Clean typography.
+
+### **DevOps & Deployment**
+- **Vercel Serverless Functions**: Configured with `@vercel/node`, `vercel.json` rewrites, and database connection reuse.
+- **Git & GitHub**: Distributed version control with strict `.gitignore` for secrets.
 
 ---
 
-## 📁 Project Structure
+## ✨ Features & Implementations
+
+### 1. 🔐 Secure Authentication & Session System
+- **Registration & Validation**: Name, email, and password registration with client-side and server-side validation.
+- **Duplicate Prevention**: Multi-layer email uniqueness enforcement (Mongoose unique schema index + application query check).
+- **Password Security**: Passwords hashed before database persistence via Mongoose `pre('save')` hook with `bcryptjs`.
+- **Session Isolation**: Authentication state stored in MongoDB. Authenticated sessions access only their own data.
+- **Route Guard Middleware**: `requireLogin` middleware intercepts unauthorized requests and safely redirects to `/login`.
+
+### 2. 📝 Full Task Lifecycle (CRUD)
+- **Task Creation**: Create tasks with titles, descriptions, and optional due dates.
+- **Due Date Intelligence**: Tasks dynamically categorized as **Overdue**, **Due Today**, or **Upcoming** with visual badges.
+- **Status Toggle**: Instant toggle between pending and completed states. Automatically updates `completedAt` timestamp for analytics.
+- **Safe Task Deletion**: Delete confirmation dialogs to prevent accidental removals.
+- **Data Scoping**: Every task query strictly filtered by `userId: req.session.userId`.
+
+### 3. 📊 Student Progress Analytics
+- **Summary Metrics Grid (4 Key Cards)**:
+  - **Total Tasks**: Total count of assigned tasks.
+  - **Completed Tasks**: Successfully finished tasks.
+  - **Pending Tasks**: Work in progress.
+  - **Completion Rate (%)**: Dynamic percentage with an integrated visual progress bar.
+- **7-Day Productivity Trend Chart**:
+  - Chart.js line chart plotting actual daily tasks completed over the last 7 days.
+  - Dynamically computed using MongoDB date aggregation.
+- **Task Distribution Doughnut Chart**:
+  - Proportional breakdown between completed and pending tasks with real-time percentage indicators.
+
+### 4. 📅 Interactive Task Calendar
+- **Monthly Grid View**: Full calendar view with seamless month-to-month navigation (Previous, Next, Today).
+- **Due Date Indicators**: Visual indicator dots on calendar dates representing scheduled tasks.
+- **Selected Day Inspector**: Click any calendar date to view all tasks scheduled for that specific day in a sidebar panel.
+- **Quick-Add from Calendar**: Add a task directly to the selected calendar date with pre-filled due dates.
+- **Dynamic API Endpoint (`GET /api/calendar-tasks`)**: Fetches month-scoped tasks asynchronously without full page reloads.
+
+### 5. 🎨 Design & Accessibility
+- **Zero-Gradient Solid Aesthetic**: Professional UI adhering to clean contrast guidelines.
+- **Fully Responsive**: Mobile-first grid layouts for smartphones, tablets, and desktop displays.
+- **Friendly Error Handling**: Custom 404 error page, input validation alerts, and clear error banners.
+
+---
+
+## 📁 Project Architecture
 
 ```
-student-task-manager/
-│
+Student-Traker/
+├── api/
+│   └── index.js             # Vercel serverless entrypoint
 ├── models/
-│   ├── User.js          # User schema with bcrypt pre-save hook
-│   └── Task.js          # Task schema with userId reference
-│
+│   ├── User.js              # User Mongoose schema & password hashing hooks
+│   └── Task.js              # Task schema (title, status, dueDate, completedAt)
 ├── routes/
-│   ├── auth.js          # Login, Signup, Logout routes
-│   └── tasks.js         # Dashboard + Task CRUD routes
-│
+│   ├── auth.js              # Authentication routes (login, signup, logout)
+│   └── tasks.js             # Dashboard, CRUD, analytics & calendar API routes
 ├── middleware/
-│   └── auth.js          # requireLogin middleware
-│
+│   └── auth.js              # Session verification route guard (requireLogin)
 ├── views/
-│   ├── login.ejs        # Login page
-│   ├── signup.ejs       # Signup page
-│   ├── dashboard.ejs    # Main dashboard
-│   └── 404.ejs          # 404 error page
-│
+│   ├── login.ejs            # Secure login interface
+│   ├── signup.ejs           # Registration interface
+│   ├── dashboard.ejs        # Main student hub (Stats, Charts, Calendar, Tasks)
+│   └── 404.ejs              # Not Found error page
 ├── public/
 │   ├── css/
-│   │   └── style.css    # Complete stylesheet
+│   │   └── style.css        # Responsive stylesheet with CSS variables
 │   └── js/
-│       ├── auth.js      # Password toggle JS
-│       └── dashboard.js # Task form validation JS
-│
-├── .env                 # Environment variables (NOT committed)
-├── .env.example         # Environment variables template
-├── .gitignore           # Ignores node_modules and .env
-├── server.js            # Express app entry point
-├── package.json         # Project metadata and scripts
-└── README.md            # This file
+│       ├── auth.js          # Password visibility toggle & validation
+│       └── dashboard.js     # Chart.js renderers & interactive calendar engine
+├── .env.example             # Template for required environment variables
+├── .gitignore               # Excludes .env, node_modules, and cache files
+├── package.json             # NPM dependencies, scripts, and metadata
+├── server.js                # Express app setup, MongoDB connection & routes
+├── vercel.json              # Vercel deployment configuration
+└── README.md                # Project documentation
 ```
 
 ---
 
-## ⚙️ Installation
+## 📡 API & Route Specifications
 
-### Prerequisites
+### **Authentication Routes**
+| Method | Route | Description | Protection |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Root router — redirects to `/dashboard` or `/login` | Public |
+| `GET` | `/login` | Renders user login form | Public |
+| `POST` | `/login` | Validates credentials & creates session | Public |
+| `GET` | `/signup` | Renders registration form | Public |
+| `POST` | `/signup` | Hashes password & creates new user account | Public |
+| `POST` | `/logout` | Destroys session & clears cookie | Authenticated |
 
-- Node.js (v18 or later recommended)
-- MongoDB (local install or MongoDB Atlas)
-- npm
+### **Dashboard & Task Routes**
+| Method | Route | Description | Protection |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/dashboard` | Renders analytics, calendar data, and task lists | `requireLogin` |
+| `POST` | `/tasks` | Creates a new task (with optional `dueDate`) | `requireLogin` |
+| `POST` | `/tasks/:id/toggle` | Toggles completion status & sets `completedAt` | `requireLogin` |
+| `POST` | `/tasks/:id/delete` | Permanently removes task | `requireLogin` |
+| `GET` | `/api/calendar-tasks` | Asynchronously returns tasks for year/month | `requireLogin` |
 
-### Steps
+---
 
-1. **Clone the repository**
+## ⚙️ Local Setup & Installation
 
+### **Prerequisites**
+- [Node.js](https://nodejs.org/) (v18.0.0 or higher)
+- [MongoDB](https://www.mongodb.com/) (Local instance or free MongoDB Atlas cluster)
+- [Git](https://git-scm.com/)
+
+### **1. Clone Repository**
 ```bash
-git clone <your-repository-url>
-cd student-task-manager
+git clone https://github.com/adiseshu143/Student-Traker.git
+cd Student-Traker
 ```
 
-2. **Install dependencies**
-
+### **2. Install Dependencies**
 ```bash
 npm install
 ```
 
-3. **Set up environment variables**
+### **3. Configure Environment Variables**
+Create a `.env` file in the project root by copying the example:
 
 ```bash
 cp .env.example .env
 ```
 
-Then open `.env` and fill in your values:
-
-```
-MONGO_URI=mongodb://localhost:27017/student_task_manager
-SESSION_SECRET=your_super_secret_session_key_change_this_in_production
+Open `.env` and configure your credentials:
+```env
 PORT=3000
+NODE_ENV=development
+MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/student_task_manager?retryWrites=true&w=majority
+SESSION_SECRET=your_custom_long_random_session_secret_key
 ```
 
----
-
-## 🍃 MongoDB Setup
-
-### Option A – Local MongoDB
-
-Make sure MongoDB is installed and running:
-
-```bash
-mongod
-```
-
-Use the default URI:
-```
-MONGO_URI=mongodb://localhost:27017/student_task_manager
-```
-
-### Option B – MongoDB Atlas (Cloud)
-
-1. Create a free account at [mongodb.com/atlas](https://www.mongodb.com/atlas)
-2. Create a cluster and get your connection string
-3. Replace the MONGO_URI in `.env`:
-
-```
-MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/student_task_manager
-```
-
----
-
-## 🚀 How to Run
-
+### **4. Start the Application**
 ```bash
 npm start
 ```
-
-Or equivalently:
-
+or for development:
 ```bash
-node server.js
+npm run dev
 ```
 
-The application will be available at:
-
-```
-http://localhost:3000
-```
+Visit the application in your browser:
+👉 **`http://localhost:3000`**
 
 ---
 
-## 🔐 Authentication Flow
+## ☁️ Deployment on Vercel
 
-1. **Signup** – User fills name, email, password, confirm password → `POST /signup`
-   - Validates all fields
-   - Checks for duplicate email in MongoDB
-   - Hashes password with bcrypt (12 rounds)
-   - Creates user in MongoDB
-   - Creates session and redirects to dashboard
-
-2. **Login** – User enters email and password → `POST /login`
-   - Finds user by email in MongoDB
-   - Compares entered password with bcrypt hash
-   - Creates session (`req.session.userId`)
-   - Redirects to dashboard
-
-3. **Session Protection** – `requireLogin` middleware checks `req.session.userId`
-   - Applied to `/dashboard`, task creation, toggle, and deletion routes
-   - Unauthenticated requests redirect to `/login`
-
-4. **Logout** – `POST /logout`
-   - Destroys the session
-   - Redirects to login page
+1. **Import Project**: Connect your GitHub repository (`Student-Traker`) on [Vercel](https://vercel.com).
+2. **Environment Variables**: In the Vercel project settings, add:
+   - `MONGO_URI`: Your MongoDB Atlas connection URI.
+   - `SESSION_SECRET`: A strong random string.
+   - `NODE_ENV`: `production`
+3. **MongoDB Atlas Whitelist**: Under **Network Access** in MongoDB Atlas, ensure `0.0.0.0/0` (Allow access from anywhere) is enabled.
+4. **Deploy**: Vercel will automatically build and deploy using `vercel.json` and `api/index.js`.
 
 ---
 
-## 📡 API Routes
+## 🛡️ Security Best Practices
 
-### Authentication
-
-| Method | Route     | Description                        | Auth Required |
-|--------|-----------|------------------------------------|---------------|
-| GET    | /         | Redirect to login or dashboard     | No            |
-| GET    | /login    | Render login page                  | No            |
-| POST   | /login    | Process login credentials          | No            |
-| GET    | /signup   | Render signup page                 | No            |
-| POST   | /signup   | Process signup form                | No            |
-| POST   | /logout   | Destroy session and logout         | Yes           |
-
-### Dashboard & Tasks
-
-| Method | Route                  | Description                        | Auth Required |
-|--------|------------------------|------------------------------------|---------------|
-| GET    | /dashboard             | Render dashboard with tasks/stats  | Yes           |
-| POST   | /tasks                 | Create a new task                  | Yes           |
-| POST   | /tasks/:id/toggle      | Toggle task completion status      | Yes           |
-| POST   | /tasks/:id/delete      | Delete a task                      | Yes           |
+- 🔒 **No Plain-Text Passwords**: Passwords salted and hashed with `bcryptjs`.
+- 🔒 **Cookie Protection**: Session cookies use `httpOnly: true`, `sameSite: 'lax'`, and dynamic `secure` flags.
+- 🔒 **Reverse Proxy Trust**: `app.set('trust proxy', 1)` configured for secure cookie headers on cloud hosts.
+- 🔒 **SQL/NoSQL Isolation**: Mongoose strictly validates object models, preventing injection.
+- 🔒 **Credential Isolation**: All keys, passwords, and connection strings managed exclusively via environment variables.
 
 ---
 
-## 🔒 Security Measures
+## 👨‍💻 Author & Acknowledgements
 
-- ✅ Passwords hashed with bcrypt (12 salt rounds) — never stored plain-text
-- ✅ Session-based authentication using express-session
-- ✅ Session stored in MongoDB via connect-mongo
-- ✅ All sensitive routes protected by `requireLogin` middleware
-- ✅ All task operations scoped to `req.session.userId` — users cannot access others' tasks
-- ✅ Environment variables via dotenv — secrets never hardcoded
-- ✅ `.env` listed in `.gitignore` — never committed
-- ✅ Duplicate email prevention with both Mongoose unique index and application-level check
-- ✅ Input validation on both client and server
-
----
-
-## 📸 Screenshots
-
-> _Add screenshots of the login, signup, and dashboard pages here after running the application._
-
----
-
-## 🔮 Future Improvements
-
-- [ ] Task due dates and reminders
-- [ ] Task categories / labels
-- [ ] Priority levels (High / Medium / Low)
-- [ ] Drag-and-drop task reordering
-- [ ] Email notifications
-- [ ] Dark mode
-- [ ] REST API with JWT for mobile clients
-- [ ] Pagination for large task lists
-- [ ] Search and filter tasks
-- [ ] User profile editing / password change
-
----
-
-## 📝 Environment Variables
-
-| Variable        | Description                                   | Example                          |
-|-----------------|-----------------------------------------------|----------------------------------|
-| MONGO_URI       | MongoDB connection string                     | mongodb://localhost:27017/stm    |
-| SESSION_SECRET  | Secret key for session encryption             | a_long_random_secret_string      |
-| PORT            | Port the server runs on                       | 3000                             |
-
----
-
-*Built with ❤️ for WD401 – Full Stack Web Application with Node.js & Express.js*
+- **Developer**: Adiseshu
+- **Course**: WD401 – Full Stack Web Application with Node.js & Express.js
+- **License**: ISC License
