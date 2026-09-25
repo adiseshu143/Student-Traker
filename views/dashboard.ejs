@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Your personal task dashboard – Student Task Manager." />
+  <title>Dashboard – Student Task Manager</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Chart.js CDN (lightweight, no extra install needed) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="dashboard-page">
+
+  <!-- ── Navbar ─────────────────────────────────────────── -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="navbar-inner">
+      <a class="navbar-logo" href="/dashboard" aria-label="Student Task Manager home">
+        <div class="navbar-logo-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11l3 3L22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        </div>
+        <span class="navbar-logo-text">Student Task Manager</span>
+      </a>
+
+      <div class="navbar-right">
+        <div class="navbar-user">
+          <div class="navbar-avatar" aria-hidden="true">
+            <%= user.name.charAt(0).toUpperCase() %>
+          </div>
+          <span class="navbar-username"><%= user.name %></span>
+        </div>
+        <form action="/logout" method="POST" class="logout-form">
+          <button type="submit" class="btn-logout" id="logoutBtn" aria-label="Logout">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span>Logout</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Main Content ───────────────────────────────────── -->
+  <main class="dashboard-content" id="main-content">
+
+    <!-- Greeting -->
+    <header class="dashboard-greeting">
+      <h1 class="greeting-title">
+        <%= greeting %>, <span><%= user.name.split(' ')[0] %></span> 👋
+      </h1>
+      <p class="greeting-subtitle">Stay organized and keep making progress.</p>
+    </header>
+
+    <!-- Alerts -->
+    <% const urlError = typeof error === 'string' && error ? error : null; %>
+    <% if (urlError) { %>
+      <div class="alert alert-error" role="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span><%= urlError %></span>
+      </div>
+    <% } %>
+
+    <div id="taskAlert" style="display:none;" class="alert alert-error" role="alert">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span id="taskAlertMsg"></span>
+    </div>
+
+    <!-- ── Statistics (4 cards) ───────────────────────────── -->
+    <section aria-label="Task statistics" class="stats-grid stats-grid-4">
+
+      <div class="stat-card">
+        <div class="stat-card-label">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+          Total Tasks
+        </div>
+        <div class="stat-card-value"><%= totalTasks %></div>
+        <div class="stat-card-desc">All time</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-label">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Completed
+        </div>
+        <div class="stat-card-value green"><%= completedTasks %></div>
+        <div class="stat-card-desc">Tasks done</div>
+      </div>
+
+      <div class="stat-card muted-strip">
+        <div class="stat-card-label">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Pending
+        </div>
+        <div class="stat-card-value muted"><%= pendingTasks %></div>
+        <div class="stat-card-desc">Still to do</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-label">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          Completion Rate
+        </div>
+        <div class="stat-card-value green"><%= completionRate %>%</div>
+        <div class="stat-card-desc">of tasks completed</div>
+      </div>
+
+    </section>
+
+    <!-- ── Progress Analytics ─────────────────────────────── -->
+    <section class="analytics-section" aria-label="Progress analytics">
+      <h2 class="section-heading">Progress Analytics</h2>
+
+      <div class="charts-grid">
+
+        <!-- Line Chart: Daily Progress -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-card-title">Daily Completed Tasks</span>
+            <span class="chart-card-subtitle">Last 7 days</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="dailyChart" aria-label="Daily completed tasks chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Doughnut Chart: Task Status -->
+        <div class="chart-card chart-card-sm">
+          <div class="chart-card-header">
+            <span class="chart-card-title">Task Status</span>
+            <span class="chart-card-subtitle">Current snapshot</span>
+          </div>
+          <div class="chart-wrapper chart-wrapper-donut">
+            <canvas id="statusChart" aria-label="Task status chart"></canvas>
+          </div>
+          <div class="donut-legend">
+            <span class="donut-legend-item">
+              <span class="donut-dot" style="background:#16A34A;"></span> Completed (<%= completedTasks %>)
+            </span>
+            <span class="donut-legend-item">
+              <span class="donut-dot" style="background:#D1D5DB;"></span> Pending (<%= pendingTasks %>)
+            </span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Calendar ───────────────────────────────────────── -->
+    <section class="calendar-section" aria-label="Task calendar">
+      <h2 class="section-heading">Task Calendar</h2>
+
+      <div class="calendar-layout">
+
+        <!-- Calendar grid -->
+        <div class="calendar-card">
+          <div class="calendar-nav">
+            <button id="prevMonth" class="cal-nav-btn" aria-label="Previous month">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
+            <span id="calMonthLabel" class="cal-month-label"></span>
+            <button id="nextMonth" class="cal-nav-btn" aria-label="Next month">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="calendar-weekdays">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span>
+            <span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+
+        <!-- Selected day tasks panel -->
+        <div class="calendar-detail-card" id="calDetailCard">
+          <div id="calDetailHeader" class="cal-detail-header">
+            <span id="calDetailDate" class="cal-detail-date">Select a date</span>
+          </div>
+
+          <div id="calDetailEmpty" class="cal-detail-empty">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <p>Click a date to see tasks</p>
+          </div>
+
+          <ul id="calTaskList" class="cal-task-list" style="display:none;"></ul>
+
+          <!-- Add task for selected date -->
+          <div id="calAddTaskForm" class="cal-add-form" style="display:none;">
+            <form id="calTaskForm" action="/tasks" method="POST">
+              <input type="hidden" name="dueDate" id="calDueDateInput" />
+              <div class="cal-input-row">
+                <input
+                  type="text"
+                  name="title"
+                  id="calTaskTitle"
+                  class="task-input"
+                  placeholder="Add a task for this date…"
+                  maxlength="300"
+                  autocomplete="off"
+                  required
+                />
+                <button type="submit" class="btn-add-task">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  Add
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Create Task ────────────────────────────────────── -->
+    <section class="create-task-card" aria-label="Create new task">
+      <div class="section-title">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+        New Task
+      </div>
+      <form action="/tasks" method="POST" class="task-create-form" id="taskCreateForm" novalidate>
+        <div class="task-input-wrapper">
+          <svg class="task-input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          <input
+            type="text"
+            name="title"
+            id="taskTitle"
+            class="task-input"
+            placeholder="What needs to be done?"
+            maxlength="300"
+            autocomplete="off"
+            required
+          />
+        </div>
+        <input
+          type="date"
+          name="dueDate"
+          id="taskDueDate"
+          class="task-input task-date-input"
+          title="Due date (optional)"
+        />
+        <button type="submit" class="btn-add-task" id="addTaskBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Task
+        </button>
+      </form>
+      <div id="taskInputError" class="task-error" style="display:none;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span>Please enter a task before adding.</span>
+      </div>
+    </section>
+
+    <!-- ── Task List ──────────────────────────────────────── -->
+    <section class="tasks-section" aria-label="Your tasks" id="taskList">
+      <div class="tasks-header">
+        <div class="tasks-header-title">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+          My Tasks
+        </div>
+        <span class="tasks-count-badge"><%= totalTasks %></span>
+      </div>
+
+      <% if (tasks.length === 0) { %>
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </div>
+          <p class="empty-title">No tasks yet</p>
+          <p class="empty-desc">Create your first task above and start making progress.</p>
+        </div>
+      <% } else { %>
+        <ul class="task-list" id="taskListItems">
+
+          <%
+            const pendingList = tasks.filter(t => !t.completed);
+            const completedList = tasks.filter(t => t.completed);
+          %>
+
+          <!-- Pending Tasks -->
+          <% pendingList.forEach(function(task) { %>
+            <li class="task-item" id="task-<%= task._id %>">
+              <form action="/tasks/<%= task._id %>/toggle" method="POST" class="task-checkbox-form">
+                <button type="submit" class="task-checkbox-btn" title="Mark as complete" aria-label="Mark '<%= task.title %>' as complete">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </button>
+              </form>
+
+              <div class="task-body">
+                <p class="task-title"><%= task.title %></p>
+                <p class="task-meta">
+                  <% if (task.dueDate) { %>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    Due: <%= new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                    &nbsp;·&nbsp;
+                  <% } %>
+                  Added <%= new Date(task.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                </p>
+              </div>
+
+              <div class="task-actions">
+                <form action="/tasks/<%= task._id %>/toggle" method="POST" style="display:inline;">
+                  <button type="submit" class="task-action-btn complete">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>Complete</span>
+                  </button>
+                </form>
+                <form action="/tasks/<%= task._id %>/delete" method="POST" style="display:inline;" onsubmit="return confirmDelete()">
+                  <button type="submit" class="task-action-btn delete">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                    <span>Delete</span>
+                  </button>
+                </form>
+              </div>
+            </li>
+          <% }); %>
+
+          <!-- Completed Tasks -->
+          <% if (completedList.length > 0) { %>
+            <li class="tasks-divider">Completed &nbsp;·&nbsp; <%= completedList.length %></li>
+
+            <% completedList.forEach(function(task) { %>
+              <li class="task-item completed" id="task-<%= task._id %>">
+                <form action="/tasks/<%= task._id %>/toggle" method="POST" class="task-checkbox-form">
+                  <button type="submit" class="task-checkbox-btn" title="Mark as pending" aria-label="Mark '<%= task.title %>' as pending">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </button>
+                </form>
+
+                <div class="task-body">
+                  <p class="task-title"><%= task.title %></p>
+                  <p class="task-meta">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Completed
+                    <% if (task.completedAt) { %>
+                      · <%= new Date(task.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %>
+                    <% } %>
+                  </p>
+                </div>
+
+                <div class="task-actions">
+                  <form action="/tasks/<%= task._id %>/toggle" method="POST" style="display:inline;">
+                    <button type="submit" class="task-action-btn undo">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.74"/>
+                      </svg>
+                      <span>Undo</span>
+                    </button>
+                  </form>
+                  <form action="/tasks/<%= task._id %>/delete" method="POST" style="display:inline;" onsubmit="return confirmDelete()">
+                    <button type="submit" class="task-action-btn delete">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                        <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                      </svg>
+                      <span>Delete</span>
+                    </button>
+                  </form>
+                </div>
+              </li>
+            <% }); %>
+          <% } %>
+
+        </ul>
+      <% } %>
+    </section>
+
+  </main>
+
+  <!-- Pass server data to JS -->
+  <script>
+    // Daily progress data from MongoDB (last 7 days)
+    const DAILY_LABELS = <%- JSON.stringify(dailyProgress.map(d => d.label)) %>;
+    const DAILY_COUNTS = <%- JSON.stringify(dailyProgress.map(d => d.count)) %>;
+
+    // Task status data
+    const COMPLETED_COUNT = <%= completedTasks %>;
+    const PENDING_COUNT = <%= pendingTasks %>;
+
+    // All user tasks (for calendar — only those with dueDates matter most)
+    const ALL_TASKS = <%- taskDataForCalendar %>;
+  </script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

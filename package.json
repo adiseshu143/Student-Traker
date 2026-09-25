@@ -1,0 +1,28 @@
+{
+  "name": "student-task-manager",
+  "version": "1.0.0",
+  "description": "A full-stack Student Task Manager built with Node.js, Express.js, MongoDB, and EJS",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "nodejs",
+    "expressjs",
+    "mongodb",
+    "task-manager",
+    "full-stack"
+  ],
+  "author": "Adiseshu",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "connect-mongo": "^5.1.0",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "mongoose": "^8.9.5"
+  }
+}
