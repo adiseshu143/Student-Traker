@@ -9,6 +9,9 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy for secure cookies on platforms like Vercel / Render
+app.set('trust proxy', 1);
+
 // ─── View Engine ──────────────────────────────────────────────────────────────
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -28,17 +31,33 @@ app.use((req, res, next) => {
 });
 
 // ─── MongoDB Connection ───────────────────────────────────────────────────────
-mongoose
-  .connect(process.env.MONGO_URI, {
-    serverSelectionTimeoutMS: 5000,
-  })
-  .then(() => {
+let isConnected = false;
+const connectDB = async () => {
+  if (isConnected || mongoose.connection.readyState === 1) {
+    isConnected = true;
+    return;
+  }
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
+    isConnected = true;
     console.log('✅  Connected to MongoDB');
-  })
-  .catch((err) => {
+  } catch (err) {
     console.error('❌  MongoDB connection error:', err.message);
-    process.exit(1);
-  });
+  }
+};
+
+// Connect immediately on startup
+connectDB();
+
+// Ensure DB is connected before handling requests
+app.use(async (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    await connectDB();
+  }
+  next();
+});
 
 // ─── Session Middleware ───────────────────────────────────────────────────────
 app.use(
@@ -55,6 +74,7 @@ app.use(
       maxAge: 24 * 60 * 60 * 1000, // 1 day
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
     },
   })
 );
@@ -77,7 +97,12 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something went wrong. Please try again later.');
 });
 
-// ─── Start Server ─────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`🚀  Student Task Manager running at http://localhost:${PORT}`);
-});
+// ─── Start Server (Local) ─────────────────────────────────────────────────────
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀  Student Task Manager running at http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
+
